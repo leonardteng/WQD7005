@@ -1,0 +1,28 @@
+Sys.setenv(JAVA_HOME='C:/Program Files/Java/jre1.8.0_211')
+library(sentimentr)
+library(dplyr)
+library('lubridate')
+library('stringr')
+library(ggplot2)
+library(xlsx)
+library(SentimentAnalysis)
+
+stock <- read.csv("dufu.csv")
+stock <- na.omit(stock)
+str(stock)
+stock$title <- as.character(stock$title)
+stock$subhead <- as.character(stock$subhead)
+stock$para <- as.character(stock$para)
+
+title_senti <- analyzeSentiment(as.vector(stock$title))
+subhead_senti <- analyzeSentiment(as.vector(stock$subhead))
+senti_para <- analyzeSentiment(as.vector(stock$para))
+mean_senti <- as.data.frame(cbind(title_senti$SentimentQDAP, subhead_senti$SentimentQDAP, senti_para$SentimentQDAP))
+mean_senti$mean <- rowMeans(mean_senti[,1:3], na.rm = T)
+mean_senti$date <- stock$date 
+mean_senti$date <- dmy_hm(mean_senti$date)
+mean_senti$date <- as_date(mean_senti$date)
+mean_senti$convertvalue <- convertToDirection(mean_senti$mean)
+arranged_mean_senti <-  mean_senti %>% arrange(date) 
+
+write.csv(arranged_mean_senti, "dufu_senti.csv")
